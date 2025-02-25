@@ -92,3 +92,59 @@ std::shared_ptr<T> Singleton<T>::_instance = nullptr;
 1. **std::once_flag** 是一个标志，用于配合 std::call_once 来确保某个函数或代码块在多线程环境下只执行一次。
 2. **std::call_once** 是一个函数，它接受一个 std::once_flag 和一个可调用对象（例如 lambda 表达式）。它保证这个可调用对象在程序的生命周期内只被执行一次，即使在多线程环境中。
 
+## http 管理类
+
+首先在 `.pro` 文件中添加网络库。
+
+```c++
+QT += core gui network
+```
+
+头文件如下：
+
+```c++
+#ifndef HTTPMGR_H
+#define HTTPMGR_H
+
+#include "singleton.h"
+#include <QJsonDocument>
+#include <QJsonObject>
+#include <QNetworkAccessManager>
+#include <QObject>
+#include <QString>
+#include <QUrl>
+
+// CRTP
+class HttpMgr : public QObject,
+                public Singleton<HttpMgr>,
+                public std::enable_shared_from_this<HttpMgr>
+{
+    Q_OBJECT
+public:
+    ~HttpMgr();
+
+private:
+    friend class Singleton<HttpMgr>;
+    HttpMgr();
+    QNetworkAccessManager _manager;
+
+    void PostHttpReq(QUrl url, QJsonObject json, ReqId req_id, Modules mod);
+
+private slots:
+    void slot_http_finish(ReqId id, QString res, ErrorCodes err, Modules mod);
+
+signals:
+    void sig_http_finish(ReqId id, QString res, ErrorCodes err, Modules mod);
+    void sig_reg_mod_finish(ReqId id, QString res, ErrorCodes err);
+};
+
+#endif // HTTPMGR_H
+
+```
+
+## 配置 GateServer
+
+在 VS 中配置了 boost 和 jsoncpp。后面在 linux 上配置一下，把网关服务器配置到 linux 上。
+
+VS 的配置实在繁琐，后面试试用 xmake 重新配一下。这段就省略了。
+
